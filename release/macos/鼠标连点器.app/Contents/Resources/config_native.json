@@ -1,0 +1,18 @@
+{
+  "click_type": "单击",
+  "frequency": 10,
+  "max_clicks": 0,
+  "button_type": "左键",
+  "hotkey_config": {
+    "start_mods": [
+      "Ctrl",
+      "Option"
+    ],
+    "start_key": "S",
+    "stop_mods": [
+      "Ctrl",
+      "Option"
+    ],
+    "stop_key": "D"
+  }
+}

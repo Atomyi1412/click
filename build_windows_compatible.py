@@ -74,7 +74,7 @@ def build_windows_compatible_exe():
         cmd.insert(-1, '--icon=icon.ico')
 
     try:
-        print(f"执行命令: {' '.join(cmd)}")
+        print(f"Executing command: {' '.join(cmd)}")
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
         print("Build successful!")
         print(result.stdout)

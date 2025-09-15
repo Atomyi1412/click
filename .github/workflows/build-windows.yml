@@ -1,4 +1,4 @@
-name: Build Windows EXE
+name: Build Windows Compatible EXE
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ on:
       - '.github/workflows/build-windows.yml'
 
 jobs:
-  build-windows:
+  build-windows-compatible:
     runs-on: windows-latest
 
     steps:
@@ -30,15 +30,54 @@ jobs:
           pip install -r requirements.txt
           pip install PyInstaller==6.13.0
 
-      - name: Build single-file exe
+      - name: Build compatible exe (onedir mode)
+        shell: bash
+        run: |
+          python build_windows_compatible.py
+
+      - name: Create portable package
+        shell: bash
+        run: |
+          cd release/windows_compatible
+          7z a -tzip ../../MouseClicker_Win11_Compatible_Portable.zip MouseClicker_Win11_Compat/ Start_MouseClicker_Win11_Compat.bat README_Windows_Compatible.md
+
+      - name: Upload compatible artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MouseClicker_Win11_Compatible_Portable
+          path: |
+            MouseClicker_Win11_Compatible_Portable.zip
+            release/windows_compatible/**
+
+  build-windows-legacy:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          architecture: 'x64'
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install PyInstaller==6.13.0
+
+      - name: Build single-file exe (legacy)
         shell: bash
         run: |
           python build_windows.py
 
-      - name: Upload artifacts
+      - name: Upload legacy artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: MouseClicker_Win11_single_file
+          name: MouseClicker_Win11_Legacy
           path: |
             dist/MouseClicker_Win11.exe
             release/windows/**

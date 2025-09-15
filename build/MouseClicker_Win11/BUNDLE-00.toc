@@ -1,3 +1,0 @@
-([('MouseClicker_Win11',
-   '/Volumes/kaitou/click/dist/MouseClicker_Win11',
-   'EXECUTABLE')],)

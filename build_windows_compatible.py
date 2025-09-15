@@ -221,7 +221,7 @@ start "" "MouseClicker_Win11_Compat.exe"
 **注意**：请遵守相关软件的使用协议，不要用于违规用途。
 '''
     
-    readme_file = release_dir / 'README_Windows11.md'
+    readme_file = release_dir / 'README_Windows_Compatible.md'
     with open(readme_file, 'w', encoding='utf-8') as f:
         f.write(readme_content)
     print(f"✅ 已创建使用说明: {readme_file}")

@@ -1,0 +1,154 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.2.0)'
+        required: true
+        default: 'v1.0.0'
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          architecture: 'x64'
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install PyInstaller==6.13.0
+
+      - name: Build Windows compatible version
+        shell: bash
+        run: |
+          python build_windows_compatible.py
+
+      - name: Create portable package
+        shell: bash
+        run: |
+          cd release/windows_compatible
+          7z a -tzip ../../MouseClicker_Win11_Compatible_Portable.zip MouseClicker_Win11_Compat/ Start_MouseClicker_Win11_Compat.bat README_Windows_Compatible.md
+          cd ../..
+          ls -la MouseClicker_Win11_Compatible_Portable.zip
+
+      - name: Build legacy single-file version
+        shell: bash
+        run: |
+          python build_windows.py
+
+      - name: Create legacy package
+        shell: bash
+        run: |
+          cd release/windows
+          7z a -tzip ../../MouseClicker_Win11_Legacy.zip MouseClicker_Win11.exe Start_MouseClicker.bat README_Windows11_Fix.md
+          cd ../..
+          ls -la MouseClicker_Win11_Legacy.zip
+
+      - name: Get version
+        id: get_version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          release_name: 鼠标连点器 ${{ steps.get_version.outputs.version }}
+          body: |
+            ## 🚀 鼠标连点器 ${{ steps.get_version.outputs.version }}
+            
+            ### 📦 下载说明
+            
+            **推荐下载**：
+            - `MouseClicker_Win11_Compatible_Portable.zip` - **Windows 11 兼容版（推荐）**
+              - 解决了"此应用无法在你的电脑上运行"问题
+              - 真正的 64 位 Windows 可执行文件
+              - 免安装，解压即用
+              - 包含所有必要的运行时库
+            
+            **备用版本**：
+            - `MouseClicker_Win11_Legacy.zip` - 传统单文件版
+              - 如果兼容版无法使用，可尝试此版本
+            
+            ### ✨ 主要功能
+            - 🖱️ 鼠标自动连点（支持左键/右键/中键）
+            - ⌨️ 全局热键控制（Ctrl+Alt+S 开始，Ctrl+Alt+D 停止）
+            - ⚙️ 可自定义点击频率（1-100次/秒）
+            - 💾 自动保存配置
+            - 🎯 支持指定点击次数或无限制
+            
+            ### 🔧 使用方法
+            1. 下载 `MouseClicker_Win11_Compatible_Portable.zip`
+            2. 解压到任意文件夹
+            3. 双击 `Start_MouseClicker_Win11_Compat.bat` 启动
+            4. 首次运行可能需要允许 Windows Defender 警告
+            
+            ### ⚠️ 注意事项
+            - 建议以管理员权限运行以确保全局热键功能
+            - 请遵守相关软件使用协议，不要用于违规用途
+            - 支持 Windows 10/11 64位系统
+            
+            ### 🐛 问题反馈
+            如遇到问题，请在 Issues 中反馈，并提供：
+            - Windows 版本信息
+            - 错误截图
+            - 具体使用场景
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+
+      - name: Upload Compatible Version
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./MouseClicker_Win11_Compatible_Portable.zip
+          asset_name: MouseClicker_Win11_Compatible_Portable.zip
+          asset_content_type: application/zip
+
+      - name: Upload Legacy Version
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./MouseClicker_Win11_Legacy.zip
+          asset_name: MouseClicker_Win11_Legacy.zip
+          asset_content_type: application/zip
+
+      - name: Upload Artifacts for Testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: Release_Packages_${{ steps.get_version.outputs.version }}
+          path: |
+            MouseClicker_Win11_Compatible_Portable.zip
+            MouseClicker_Win11_Legacy.zip
+            release/windows_compatible/**
+            release/windows/**

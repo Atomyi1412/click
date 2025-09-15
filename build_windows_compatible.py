@@ -13,11 +13,11 @@ from pathlib import Path
 
 def build_windows_compatible_exe():
     """构建 Windows 11 兼容的 exe 文件"""
-    print("开始构建 Windows 11 兼容版 exe 文件...")
+    print("Building Windows 11 compatible exe file...")
 
     # 仅允许在 Windows 上打包，避免生成 Mac Mach-O 假 exe
     if sys.platform != 'win32':
-        print(f"❌ 当前平台为 {sys.platform}，不是 Windows。请在 Windows 10/11 64 位系统上执行本脚本以生成真正的 Windows 可执行文件。")
+        print(f"❌ Current platform is {sys.platform}, not Windows. Please run this script on Windows 10/11 64-bit system to generate real Windows executable.")
         return False
 
     # 确保在正确的目录
@@ -76,7 +76,7 @@ def build_windows_compatible_exe():
     try:
         print(f"执行命令: {' '.join(cmd)}")
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-        print("构建成功！")
+        print("Build successful!")
         print(result.stdout)
 
         # 检查输出文件
@@ -84,34 +84,34 @@ def build_windows_compatible_exe():
         exe_file = exe_dir / 'MouseClicker_Win11_Compat.exe'
 
         if exe_file.exists():
-            print(f"\n✅ Windows 兼容版已生成: {exe_file.absolute()}")
-            print(f"文件大小: {exe_file.stat().st_size / 1024 / 1024:.1f} MB")
+            print(f"\n✅ Windows compatible version generated: {exe_file.absolute()}")
+            print(f"File size: {exe_file.stat().st_size / 1024 / 1024:.1f} MB")
 
             # 显示目录内容
-            print(f"\n📁 发布目录内容:")
+            print(f"\n📁 Release directory contents:")
             for item in exe_dir.iterdir():
                 if item.is_file():
                     size = item.stat().st_size / 1024 / 1024
                     print(f"  {item.name} ({size:.1f} MB)")
                 else:
-                    print(f"  {item.name}/ (目录)")
+                    print(f"  {item.name}/ (directory)")
         else:
-            print("❌ 未找到生成的可执行文件")
+            print("❌ Generated executable file not found")
             return False
 
     except subprocess.CalledProcessError as e:
-        print(f"❌ 构建失败: {e}")
-        print(f"错误输出: {e.stderr}")
+        print(f"❌ Build failed: {e}")
+        print(f"Error output: {e.stderr}")
         return False
     except FileNotFoundError:
-        print("❌ PyInstaller 未找到，请确保已正确安装")
+        print("❌ PyInstaller not found, please ensure it is properly installed")
         return False
 
     return True
 
 def create_windows_compatible_package():
     """创建 Windows 11 兼容发布包"""
-    print("\n创建 Windows 11 兼容发布包...")
+    print("\nCreating Windows 11 compatible release package...")
 
     # 创建发布目录
     release_dir = Path('release/windows_compatible')
@@ -125,9 +125,9 @@ def create_windows_compatible_package():
         if app_dest.exists():
             shutil.rmtree(app_dest)
         shutil.copytree(app_source, app_dest)
-        print(f"✅ 已复制应用目录到: {app_dest}")
+        print(f"✅ Copied application directory to: {app_dest}")
     else:
-        print("❌ 未找到应用目录，无法创建发布包")
+        print("❌ Application directory not found, cannot create release package")
         return False
 
     # 创建启动脚本（英文名称，避免编码问题）
@@ -141,7 +141,7 @@ start "" "MouseClicker_Win11_Compat.exe"
 
     with open(launcher_script, 'w', encoding='utf-8') as f:
         f.write(launcher_content)
-    print(f"✅ 已创建启动脚本: {launcher_script}")
+    print(f"✅ Created launcher script: {launcher_script}")
 
     # 保留原有 README 生成逻辑（内容不影响运行）
     readme_content = '''# 鼠标连点器 - Windows 11 兼容版
@@ -224,7 +224,7 @@ start "" "MouseClicker_Win11_Compat.exe"
     readme_file = release_dir / 'README_Windows_Compatible.md'
     with open(readme_file, 'w', encoding='utf-8') as f:
         f.write(readme_content)
-    print(f"✅ 已创建使用说明: {readme_file}")
+    print(f"✅ Created README file: {readme_file}")
     
     # 复制其他说明文件
     other_files = ['README.md', 'README_Windows.md']
@@ -232,26 +232,32 @@ start "" "MouseClicker_Win11_Compat.exe"
         if os.path.exists(file_name):
             shutil.copy2(file_name, release_dir)
     
-    print(f"\n🎉 Windows 11 兼容发布包已创建: {release_dir.absolute()}")
+    print(f"\n🎉 Windows 11 compatible package created successfully: {release_dir.absolute()}")
     return True
 
 def main():
     """主函数"""
-    print("=== 鼠标连点器 Windows 11 兼容版打包工具 ===")
-    print("解决架构不匹配和运行时库缺失问题\n")
+    # 设置控制台编码为UTF-8以支持中文显示
+    import sys
+    if sys.platform == 'win32':
+        import os
+        os.system('chcp 65001 > nul')
+    
+    print("=== Mouse Clicker Windows 11 Compatible Build Tool ===")
+    print("Solving architecture mismatch and runtime library issues\n")
     
     if build_windows_compatible_exe():
         if create_windows_compatible_package():
-            print("\n✅ Windows 11 兼容版打包完成！")
-            print("\n📋 使用说明:")
-            print("1. 将 release/windows_compatible 文件夹复制到 Windows 11 系统")
-            print("2. 双击 '启动鼠标连点器.bat' 或以管理员权限运行")
-            print("3. 首次运行可能需要允许 Windows Defender 警告")
+            print("\n🎉 Windows 11 compatible build completed successfully!")
+            print("\n📋 Usage Instructions:")
+            print("1. Copy the release/windows_compatible folder to Windows 11 system")
+            print("2. Double-click 'Start_MouseClicker_Win11_Compat.bat' or run as administrator")
+            print("3. First run may require allowing Windows Defender warnings")
         else:
-            print("\n❌ 创建发布包失败！")
+            print("\n❌ Failed to create release package!")
             sys.exit(1)
     else:
-        print("\n❌ Windows 11 兼容版打包失败！")
+        print("\n❌ Windows 11 compatible build failed!")
         sys.exit(1)
 
 if __name__ == '__main__':
